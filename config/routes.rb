@@ -4,6 +4,7 @@ Rails.application.routes.draw do
     namespace :v1 do
       resources :candidates
       resources :employees
+      resources :time_slots
     end
   end
 end

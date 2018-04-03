@@ -11,6 +11,7 @@ class Api::V1::EmployeesController < ApplicationController
 
   def create
     employee = Employee.new(employees_params)
+    # NOTE: Extract to response object.
     if employee.save
       render json: employee
     else
@@ -20,6 +21,7 @@ class Api::V1::EmployeesController < ApplicationController
 
   def update
     employee = Employee.find(params[:id])
+    # NOTE: Extract to response object.
     if employee.update_attributes(employees_params)
       render json: employee
     else

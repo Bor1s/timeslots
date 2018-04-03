@@ -11,6 +11,7 @@ class Api::V1::CandidatesController < ApplicationController
 
   def create
     candidate = Candidate.new(candidate_params)
+    # NOTE: Extract to response object.
     if candidate.save
       render json: candidate
     else
@@ -20,6 +21,7 @@ class Api::V1::CandidatesController < ApplicationController
 
   def update
     candidate = Candidate.find(params[:id])
+    # NOTE: Extract to response object.
     if candidate.update_attributes(candidate_params)
       render json: candidate
     else
