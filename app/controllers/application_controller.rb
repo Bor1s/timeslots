@@ -4,6 +4,6 @@ class ApplicationController < ActionController::API
   private
 
   def not_found
-    render json: { error: 'No such record' }, status: :not_found
+    render json: { error: 'There is no such resource around!' }, status: :not_found
   end
 end
