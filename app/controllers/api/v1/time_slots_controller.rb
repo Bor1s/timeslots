@@ -1,15 +1,24 @@
 class Api::V1::TimeSlotsController < ApplicationController
   def index
-    time_slots = TimeSlot.for_users(params[:user_ids]).common
+    # Refactor all of this!
+    time_slots = TimeSlot.for_users(user_ids_params).common
+    common_time_slots = []
 
-    if (time_slots.map(&:user_id).uniq - params[:user_ids]).empty? # Do we have common time slots for all input users?
-      group = time_slots.group_by {|i| i.slot.begin.to_date}
+    if (user_ids_params - time_slots.map(&:user_id).uniq).empty? # Do we have common time slots for all input users?
+      group = time_slots.group_by {|i| i.user_id }.sort_by { |group_key, group_slots| group_slots.size }
 
-      common_time_slots = []
-      group.each do |group, time_slots|
+      # Create array of first taken timeslots from each group
+      first_group = group.shift
+      first_group.last.each do |first_group_time_slots|
+        slots = []
+        slots << first_group_time_slots
+        group.each do |group, time_slots|
+          slots << time_slots.shift
+        end
+
+        # Finding overlap between time slots
         min = Float::INFINITY
-        slots = time_slots.map(&:slot)
-        sorted_slots = slots.sort {|a,b| a.begin <=> b.begin }
+        sorted_slots = slots.map(&:slot).sort { |a,b| a.begin <=> b.begin }
         max_range_start_point = sorted_slots.last
         sorted_slots.each do |slot|
           if slot.end < min && slot.end > max_range_start_point.begin
@@ -17,15 +26,16 @@ class Api::V1::TimeSlotsController < ApplicationController
           end
         end
 
-        if min.is_a?(Float) # Check whether this is still an Infinity
-          render json: { error: "No common time slots found for people #{params[:user_ids]}"} and return
-        else
+        unless min.is_a?(Float) # Check whether this is still an Infinity
           common_time_slots << TimeSlot.new(slot: max_range_start_point.begin..min)
         end
       end
 
-      render json: common_time_slots
-
+      if common_time_slots.empty?
+        render json: { error: "No common time slots found for people #{params[:user_ids]}"}
+      else
+        render json: common_time_slots
+      end
     else
       render json: { error: "No common time slots found for people #{params[:user_ids]}"}
     end
@@ -50,6 +60,10 @@ class Api::V1::TimeSlotsController < ApplicationController
   end
 
   private
+
+  def user_ids_params
+    params.require(:user_ids)
+  end
 
   def time_slots_params
     params.permit(:user_id, time_slots: [:start, :end])
