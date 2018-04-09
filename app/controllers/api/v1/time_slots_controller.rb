@@ -1,4 +1,6 @@
 class Api::V1::TimeSlotsController < ApplicationController
+  before_action :check_user_ids, only: [:index]
+
   def index
     time_slots = TimeSlot.for_users(user_ids_params).common
     if any_common_time_slots_for_given_users?(user_ids_params, time_slots)
@@ -6,7 +8,7 @@ class Api::V1::TimeSlotsController < ApplicationController
       service.call
       render json: service.result, status: service.status
     else
-      render json: { error: "No common time slots found for users: #{user_ids_params.join(',')}"}
+      render json: { error: "No common time slots found for users: #{user_ids_params.join(',')}" }
     end
   end
 
@@ -34,6 +36,11 @@ class Api::V1::TimeSlotsController < ApplicationController
   end
 
   def any_common_time_slots_for_given_users?(user_ids, time_slots)
-   (user_ids.map(&:to_i) - time_slots.map(&:user_id).uniq).empty?
+    (user_ids.map(&:to_i) - time_slots.map(&:user_id).uniq).empty?
+  end
+
+  def check_user_ids
+    return true if user_ids_params.size > 1
+    render json: { error: 'Please provide more than one user to find common time slots.' }
   end
 end

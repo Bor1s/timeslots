@@ -2,6 +2,14 @@ require 'rails_helper'
 
 RSpec.describe Api::V1::TimeSlotsController, type: :controller do
   describe 'GET #index' do
+    before do
+      Timecop.freeze(Time.local(2018))
+    end
+
+    after do
+      Timecop.return
+    end
+
     context 'when no user ids provided' do
       it 'returns error' do
         get :index
@@ -12,33 +20,18 @@ RSpec.describe Api::V1::TimeSlotsController, type: :controller do
       end
     end
 
-    context 'when there is one user with a few slots' do
+    context 'when single user id provided in params' do
       let!(:candidate) { create(:candidate) }
       let(:slot1) { Time.current..Time.current + 1.hour }
       let(:slot2) { Time.current + 2.hours..Time.current + 4.hours }
       let!(:time_slot1) { create(:time_slot, user_id: candidate.id, slot: slot1) }
       let!(:time_slot2) { create(:time_slot, user_id: candidate.id, slot: slot2) }
 
-      context 'and single user id provided in params' do
-        it 'returns error' do
-          get :index, params: { user_ids: [candidate.id] }
-          result = JSON.parse(response.body)
+      it 'returns error' do
+        get :index, params: { user_ids: [candidate.id] }
+        result = JSON.parse(response.body)
 
-          expect(result['error']).to eq "No common time slots found for users: #{candidate.id}"
-        end
-      end
-    end
-
-    context 'when there is one user with no slots' do
-      let!(:candidate) { create(:candidate) }
-
-      context 'and single user id provided in params' do
-        it 'returns error' do
-          get :index, params: { user_ids: [candidate.id] }
-          result = JSON.parse(response.body)
-
-          expect(result['error']).to eq "No common time slots found for users: #{candidate.id}"
-        end
+        expect(result['error']).to eq 'Please provide more than one user to find common time slots.'
       end
     end
 
