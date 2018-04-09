@@ -4,7 +4,7 @@ class Api::V1::TimeSlotsController < ApplicationController
     time_slots = TimeSlot.for_users(user_ids_params).common
     common_time_slots = []
 
-    if (user_ids_params - time_slots.map(&:user_id).uniq).empty? # Do we have common time slots for all input users?
+    if (user_ids_params.map(&:to_i) - time_slots.map(&:user_id).uniq).empty? # Do we have common time slots for all input users?
       group = time_slots.group_by {|i| i.user_id }.sort_by { |group_key, group_slots| group_slots.size }
 
       # Create array of first taken timeslots from each group
@@ -27,17 +27,17 @@ class Api::V1::TimeSlotsController < ApplicationController
         end
 
         unless min.is_a?(Float) # Check whether this is still an Infinity
-          common_time_slots << TimeSlot.new(slot: max_range_start_point.begin..min)
+          common_time_slots << TimeSlotShortSerializer.new(TimeSlot.new(slot: max_range_start_point.begin..min)).as_json
         end
       end
 
       if common_time_slots.empty?
-        render json: { error: "No common time slots found for people #{params[:user_ids]}"}
+        render json: { error: "No common time slots found for users: #{user_ids_params.join(',')}"}
       else
         render json: common_time_slots
       end
     else
-      render json: { error: "No common time slots found for people #{params[:user_ids]}"}
+      render json: { error: "No common time slots found for users: #{user_ids_params.join(',')}"}
     end
   end
 
