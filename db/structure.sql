@@ -102,7 +102,8 @@ CREATE TABLE public.users (
     type character varying NOT NULL,
     email character varying NOT NULL,
     created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL
+    updated_at timestamp without time zone NOT NULL,
+    name character varying
 );
 
 
@@ -203,6 +204,7 @@ SET search_path TO "$user", public;
 INSERT INTO "schema_migrations" (version) VALUES
 ('20180402142209'),
 ('20180402142222'),
-('20180405131927');
+('20180405131927'),
+('20180409203652');
 
 
